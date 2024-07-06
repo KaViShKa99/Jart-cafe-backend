@@ -2,20 +2,25 @@ package com.example.jart_cafe.services.impl;
 
 import com.example.jart_cafe.dto.ArtworkDTO;
 import com.example.jart_cafe.dto.ArtworkDetailsDTO;
+import com.example.jart_cafe.dto.MaterialDTO;
 import com.example.jart_cafe.dto.SizePriceDTO;
 import com.example.jart_cafe.model.Artwork;
 import com.example.jart_cafe.model.Image;
+import com.example.jart_cafe.model.Material;
 import com.example.jart_cafe.model.SizePrice;
 import com.example.jart_cafe.repositories.ArtworkRepository;
 import com.example.jart_cafe.repositories.ImageRepository;
 import com.example.jart_cafe.repositories.SizePriceRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.engine.jdbc.Size;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ArtworkService {
@@ -33,40 +38,49 @@ public class ArtworkService {
     public Artwork saveArtwork(ArtworkDTO artworkDTO) {
 
         Artwork artwork = new Artwork();
-        artwork.setType(artworkDTO.getType());
-        artwork.setMaterial(artworkDTO.getMaterial());
-        artwork.setPrice(artworkDTO.getPrice());
-        Artwork save = artworkRepository.save(artwork);
+        artworkDetailsAdding(artworkDTO, artwork);
 
-        for (String imageDTO : artworkDTO.getImageUrl()) {
-
-            Image image = new Image();
-            image.setArtworkId(save.getArtworkId());
-            image.setUrl(imageDTO);
-            imageRepository.saveAndFlush(image);
-        }
-        for (SizePriceDTO sizePriceDTO : artworkDTO.getSize()) {
-
-            SizePrice sizePrice = new SizePrice();
-            sizePrice.setArtworkId(save.getArtworkId());
-            sizePrice.setDesign(sizePriceDTO.getDesign());
-            sizePrice.setPrice(sizePriceDTO.getPrice());
-            sizePriceRepository.saveAndFlush(sizePrice);
-        }
-
-        return artwork;
+        return artworkRepository.save(artwork);
 
     }
 
     @Transactional
-    public void deleteById(Long id) {
-        imageRepository.deleteByArtworkId(id);
-        sizePriceRepository.deleteByArtworkId(id);
-        artworkRepository.deleteById(id);
+    public Boolean updateArtwork(Long id, ArtworkDTO artworkDTO) {
+        Optional<Artwork> optionalArtwork = artworkRepository.findById(id);
+        if (optionalArtwork.isPresent()) {
+            Artwork existingArtwork = optionalArtwork.get();
+            artworkDetailsAdding(artworkDTO, existingArtwork);
+
+//            artworkRepository.save(existingArtwork);
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    public Optional<Artwork> findById(Long id) {
-        return artworkRepository.findById(id);
+    @Transactional
+    public Boolean deleteById(Long id) {
+        Optional<Artwork> optionalArtwork = artworkRepository.findById(id);
+        if (optionalArtwork.isPresent()) {
+            artworkRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void artworkDetailsAdding(ArtworkDTO artworkDTO, Artwork existingArtwork) {
+        existingArtwork.setCategory(artworkDTO.getCategory());
+        existingArtwork.setDescription(artworkDTO.getDescription());
+        existingArtwork.setTitle(artworkDTO.getTitle());
+        existingArtwork.setPrice(artworkDTO.getPrice());
+        existingArtwork.setLastPrice(artworkDTO.getLastPrice());
+        existingArtwork.setImages(artworkDTO.getImages());
+
+        List<Material> materials = artworkDTO.getMaterials().stream()
+                .map(this::mapMaterialDTOToEntity)
+                .collect(Collectors.toList());
+        existingArtwork.setMaterials(materials);
     }
 
     public List<ArtworkDetailsDTO> findAll() {
@@ -76,12 +90,19 @@ public class ArtworkService {
 
         for (Artwork artwork : artworkList) {
             ArtworkDetailsDTO artworkDetailsDTO = new ArtworkDetailsDTO();
-            artworkDetailsDTO.setArtworkId(artwork.getArtworkId());
-            artworkDetailsDTO.setMaterial(artwork.getMaterial());
-            artworkDetailsDTO.setType(artwork.getType());
+            artworkDetailsDTO.setArtworkId(artwork.getId());
+            artworkDetailsDTO.setCategory(artwork.getCategory());
+            artworkDetailsDTO.setDescription(artwork.getDescription());
+            artworkDetailsDTO.setTitle(artwork.getTitle());
             artworkDetailsDTO.setPrice(artwork.getPrice());
-            artworkDetailsDTO.setSizePrices(sizePriceRepository.findAllByArtworkId(artwork.getArtworkId()));
-            artworkDetailsDTO.setImages(imageRepository.findAllByArtworkId(artwork.getArtworkId()));
+            artworkDetailsDTO.setLastPrice(artwork.getLastPrice());
+            artworkDetailsDTO.setImages(artwork.getImages());
+
+            List<MaterialDTO> materialDTOList = artwork.getMaterials().stream()
+                    .map(this::mapMaterialToDTO)
+                    .collect(Collectors.toList());
+
+            artworkDetailsDTO.setMaterials(materialDTOList);
 
             artworkDetailsList.add(artworkDetailsDTO);
         }
@@ -92,21 +113,76 @@ public class ArtworkService {
     public ArtworkDetailsDTO findOne(Long id) {
 
 
-        Optional<Artwork> artworks = artworkRepository.findById(id);
-        List<ArtworkDetailsDTO> artworkDetailsList = new ArrayList<>();
+        Optional<Artwork> artworkOptional = artworkRepository.findById(id);
+
+//        if (artworkOptional.isEmpty()) {
+//            throw new ResourceNotFoundException("Artwork not found with id: " + id);
+//        }
+
+        Artwork artwork = artworkOptional.get();
         ArtworkDetailsDTO artworkDetailsDTO = new ArtworkDetailsDTO();
 
-        artworkDetailsDTO.setArtworkId(id);
-        artworkDetailsDTO.setMaterial(artworks.get().getMaterial());
-        artworkDetailsDTO.setType(artworks.get().getType());
-        artworkDetailsDTO.setPrice(artworks.get().getPrice());
-        artworkDetailsDTO.setSizePrices(sizePriceRepository.findAllByArtworkId(id));
-        artworkDetailsDTO.setImages(imageRepository.findAllByArtworkId(id));
-//        artworkDetailsList.add(artworkDetailsDTO);
 
+        artworkDetailsDTO.setArtworkId(id);
+        artworkDetailsDTO.setCategory(artwork.getCategory());
+        artworkDetailsDTO.setDescription(artwork.getDescription());
+        artworkDetailsDTO.setTitle(artwork.getTitle());
+        artworkDetailsDTO.setPrice(artwork.getPrice());
+        artworkDetailsDTO.setLastPrice(artwork.getLastPrice());
+        artworkDetailsDTO.setImages(artwork.getImages());
+        artworkDetailsDTO.setMaterials(mapMaterialsToDTOs(artwork.getMaterials()));
 
         return artworkDetailsDTO;
     }
 
+    private Material mapMaterialDTOToEntity(MaterialDTO materialDTO) {
+        Material material = new Material();
+
+        material.setMaterial(materialDTO.getMaterial());
+
+        List<SizePrice> sizes = materialDTO.getSizes().stream()
+                .map(this::mapSizeDTOToEntity)
+                .collect(Collectors.toList());
+        material.setSizes(sizes);
+
+        return material;
+    }
+
+    private SizePrice mapSizeDTOToEntity(SizePriceDTO sizePriceDTO) {
+        SizePrice sizePrice = new SizePrice();
+        sizePrice.setSize(sizePriceDTO.getSize());
+        sizePrice.setPrice(sizePriceDTO.getPrice());
+
+        return sizePrice;
+    }
+
+    private MaterialDTO mapMaterialToDTO(Material material) {
+        MaterialDTO materialDTO = new MaterialDTO();
+        materialDTO.setMaterial(material.getMaterial());
+
+        List<SizePriceDTO> sizeDTOList = material.getSizes().stream()
+                .map(this::mapSizeToDTO)
+                .collect(Collectors.toList());
+        materialDTO.setSizes(sizeDTOList);
+
+        return materialDTO;
+    }
+
+    private SizePriceDTO mapSizeToDTO(SizePrice size) {
+        SizePriceDTO sizeDTO = new SizePriceDTO();
+        sizeDTO.setSize(size.getSize());
+        sizeDTO.setPrice(size.getPrice());
+
+        return sizeDTO;
+    }
+
+    private List<MaterialDTO> mapMaterialsToDTOs(List<Material> materials) {
+        return materials.stream()
+                .map(this::mapMaterialToDTO)
+                .collect(Collectors.toList());
+    }
 
 }
+
+
+

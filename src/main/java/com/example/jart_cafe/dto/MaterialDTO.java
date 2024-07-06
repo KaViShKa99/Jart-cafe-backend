@@ -9,12 +9,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class SizePriceDTO {
+public class MaterialDTO {
 
-    @JsonProperty("size")
-    private String size;
+    @JsonProperty("material")
+    private String material;
 
-    @JsonProperty("price")
-    private Double price;
-
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<SizePriceDTO> sizes;
 }

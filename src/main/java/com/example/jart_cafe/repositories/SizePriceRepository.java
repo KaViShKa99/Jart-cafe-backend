@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface SizePriceRepository extends JpaRepository<SizePrice,Long> {
-    void deleteByArtworkId(Long artworkId);
-    List<SizePrice> findAllByArtworkId(Long artworkId);
+//    void deleteByArtworkId(Long artworkId);
+//    List<SizePrice> findAllByArtworkId(Long artworkId);
 
 
 }

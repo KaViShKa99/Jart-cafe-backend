@@ -30,8 +30,9 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/authenticate", "/api/user/sign-up").permitAll()
-                        .anyRequest().authenticated()
+//                        .requestMatchers("/api/user/authenticate", "/api/user/sign-up","api/password-reset/request","api/password-reset/reset","api/artworks","api/artworks/{id}").permitAll()
+//                        .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

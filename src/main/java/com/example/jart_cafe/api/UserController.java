@@ -22,8 +22,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:5173/")
+//@CrossOrigin(origins = "http://localhost:5173/")
 @RestController
+//@CrossOrigin(origins = "https://jartcafe.com", allowCredentials = "true")
 @RequestMapping("api/user")
 public class UserController {
     @Autowired
@@ -40,16 +41,15 @@ public class UserController {
 
     @PostMapping("/authenticate")
 //    public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationDTO authenticationDTO, HttpServletResponse response) throws BadCredentialsException, DisabledException, UsernameNotFoundException, IOException, java.io.IOException {
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationDTO authenticationDTO, HttpServletResponse response) throws BadCredentialsException, DisabledException, UsernameNotFoundException, IOException, java.io.IOException {
+    public ResponseEntity<String> createAuthenticationToken(@RequestBody AuthenticationDTO authenticationDTO, HttpServletResponse response) throws BadCredentialsException, DisabledException, UsernameNotFoundException, IOException, java.io.IOException {
         System.out.println(authenticationDTO);
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationDTO.getEmail(), authenticationDTO.getPassword()));
         } catch (BadCredentialsException e) {
-//            throw new BadCredentialsException("Incorrect username or password!");
-             return new ResponseEntity<>("Incorrect username or password!", HttpStatus.BAD_REQUEST);
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Incorrect username or password!");
+            return new ResponseEntity<>("Incorrect username or password!", HttpStatus.BAD_REQUEST);
         } catch (DisabledException disabledException) {
-//            return response.sendError(HttpServletResponse.SC_NOT_FOUND, "User is not activated");
-            return new ResponseEntity<>("User is not activated", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User is not activated");
 
         }
 
@@ -58,22 +58,25 @@ public class UserController {
 
 
 
-        return new ResponseEntity<>(new AuthenticationResponse(jwt), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(jwt);
 
     }
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signupUser(@RequestBody SignupDTO signupDTO) {
-        System.out.println(signupDTO);
-        UserDTO createdUser = authService.createUser(signupDTO);
-        System.out.println(createdUser);
-        if (createdUser == null){
-            return new ResponseEntity<>("User not created, come again later!", HttpStatus.BAD_REQUEST);
+        try {
+            UserDTO createdUser = authService.createUser(signupDTO);
+            if (createdUser == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not created, please try again later!");
+            }
+//            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Registration is successful");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred. Please try again later.");
         }
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-
-//        return new ResponseEntity<>("User not created, come again later!", HttpStatus.BAD_REQUEST);
     }
+
+
 
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {

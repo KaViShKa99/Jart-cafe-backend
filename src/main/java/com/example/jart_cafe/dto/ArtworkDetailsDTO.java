@@ -9,9 +9,11 @@ import java.util.List;
 @Data
 public class ArtworkDetailsDTO {
     private Long artworkId;
-    private String material;
-    private String type;
+    private String category;
+    private String description;
+    private String title;
     private Double price;
-    private List<SizePrice> sizePrices;
-    private List<Image> images;
+    private Double lastPrice;
+    private List<String> images;
+    private List<MaterialDTO> materials;
 }

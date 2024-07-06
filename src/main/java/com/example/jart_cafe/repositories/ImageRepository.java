@@ -9,9 +9,9 @@ import java.util.List;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image,Long> {
-    void deleteByArtworkId(Long artworkId);
-
-    List<Image> findAllByArtworkId(Long artworkId);
+//    void deleteByArtworkId(Long artworkId);
+//
+//    List<Image> findAllByArtworkId(Long artworkId);
 
 }
 
