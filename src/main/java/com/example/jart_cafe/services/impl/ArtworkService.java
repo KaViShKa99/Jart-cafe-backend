@@ -46,12 +46,11 @@ public class ArtworkService {
 
     @Transactional
     public Boolean updateArtwork(Long id, ArtworkDTO artworkDTO) {
+        System.out.println(artworkDTO);
         Optional<Artwork> optionalArtwork = artworkRepository.findById(id);
         if (optionalArtwork.isPresent()) {
             Artwork existingArtwork = optionalArtwork.get();
             artworkDetailsAdding(artworkDTO, existingArtwork);
-
-//            artworkRepository.save(existingArtwork);
             return true;
         } else {
             return false;
@@ -114,10 +113,6 @@ public class ArtworkService {
 
 
         Optional<Artwork> artworkOptional = artworkRepository.findById(id);
-
-//        if (artworkOptional.isEmpty()) {
-//            throw new ResourceNotFoundException("Artwork not found with id: " + id);
-//        }
 
         Artwork artwork = artworkOptional.get();
         ArtworkDetailsDTO artworkDetailsDTO = new ArtworkDetailsDTO();

@@ -23,8 +23,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 //@CrossOrigin(origins = "http://localhost:5173/")
-@RestController
 //@CrossOrigin(origins = "https://jartcafe.com", allowCredentials = "true")
+@RestController
 @RequestMapping("api/user")
 public class UserController {
     @Autowired

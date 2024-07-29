@@ -23,7 +23,6 @@ public class ArtworkController {
 
     @PostMapping
     public Artwork createArtwork(@RequestBody ArtworkDTO artworkDTO) {
-        System.out.println(artworkDTO);
         return artworkService.saveArtwork(artworkDTO);
     }
 
