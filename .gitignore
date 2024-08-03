@@ -32,11 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
-/target
+
 /src/main/resources
 /src/main/resources/application.properties
 /uploads
-/node_modules
 /src/main/resources/static
 /src/main/resources/templates
+node_modules/
 
