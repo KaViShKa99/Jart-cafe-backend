@@ -33,15 +33,19 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
         return orderRepository.save(orderDetails).getId();
     }
     @Override
-    public Long savePremOrder(OrderDetails orderDetails) {
-//        OrderDetails orderDetails = new OrderDetails();
-//        updateOrderDetailsFromRequest(orderDetails, checkoutRequestDTO);
-        return orderRepository.save(orderDetails).getId();
+    public void updateTransaction(Long orderId) {
+        System.out.println(orderId);
+        OrderDetails orderDetails = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        System.out.println(orderDetails);
+        orderDetails.setOrderTransaction(true);
+        System.out.println(orderDetails);
+        orderRepository.save(orderDetails);
     }
 
     @Override
     public List<CheckoutRequestDetailsDTO> findAll() {
-        return orderRepository.findAll().stream()
+        return orderRepository.findByOrderTransactionTrue().stream()
                 .map(this::convertOrderDetailsToCheckoutRequest)
                 .collect(Collectors.toList());
     }
@@ -60,7 +64,7 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 
     @Override
     public List<OrderDetails> getOrdersByCustomerEmail(String email) {
-        return orderRepository.findByCustomerEmail(email);
+        return orderRepository.findByCustomerEmailAndOrderTransactionTrue(email);
     }
 
     @Override
@@ -81,6 +85,7 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 
 
     private void updateOrderDetailsFromRequest(OrderDetails orderDetails, CheckoutRequestDTO request) {
+        orderDetails.setOrderTransaction(request.getOrderTransaction());
         orderDetails.setOrderStatus(request.getOrderStatus());
         orderDetails.setOrderedDate(request.getOrderedDate());
         orderDetails.setCompletedDate(request.getCompletedDate());

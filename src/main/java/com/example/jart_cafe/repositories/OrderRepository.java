@@ -10,5 +10,8 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<OrderDetails,Long> {
     List<OrderDetails> findByCustomerEmail(String customerEmail);
+    List<OrderDetails> findByOrderTransactionTrue();
+    List<OrderDetails> findByCustomerEmailAndOrderTransactionTrue(String email);
+
 
 }

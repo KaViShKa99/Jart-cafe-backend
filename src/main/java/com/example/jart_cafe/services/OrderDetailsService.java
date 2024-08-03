@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface OrderDetailsService {
     Long saveOrder(CheckoutRequestDTO checkoutRequestDTO);
 
-    Long savePremOrder(OrderDetails orderDetails);
+    void updateTransaction(Long orderId);
 
     List<CheckoutRequestDetailsDTO> findAll();
 

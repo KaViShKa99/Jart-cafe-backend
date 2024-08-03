@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class CheckoutRequestDTO {
 
+    private Boolean orderTransaction;
     private Boolean orderStatus;
     private Date orderedDate;
     private Date completedDate;

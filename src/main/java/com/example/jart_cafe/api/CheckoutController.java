@@ -206,7 +206,7 @@ public class CheckoutController {
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(frontendBaseUrl + "/success")
-                .setCancelUrl(frontendBaseUrl + "/cancel")
+                .setCancelUrl(frontendBaseUrl + "/cancel?session_id={CHECKOUT_SESSION_ID}")
                 .putMetadata("tempOrderId", tempOrderId.toString()) // Save temporary order ID as metadata
                 .addAllLineItem(lineItems)
                 .setExpiresAt(expirationTime)
@@ -225,6 +225,7 @@ public class CheckoutController {
             Event event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
             String eventType = event.getType();
 
+
             System.out.println("Received event: " + eventType);
 //            System.out.println("Payload: " + payload);
 
@@ -242,21 +243,21 @@ public class CheckoutController {
                     case "checkout.session.completed":
                     case "payment_intent.succeeded":
                         System.out.println("completed");
-                        OrderDetails permOrder = orderDetailsService.findOrderById(tempOrderId)
-                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-
-                        orderDetailsService.savePremOrder(permOrder);
+//                        OrderDetails permOrder = orderDetailsService.findOrderById(tempOrderId)
+//                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+//                        permOrder.setOrderTransaction(true);
+                        orderDetailsService.updateTransaction(tempOrderId);
                         break;
 
-                    case "payment_intent.canceled":
                     case "checkout.session.expired":
-                        System.out.println("cancel");
                         orderDetailsService.deleteOrder(tempOrderId);
                         break;
 
                     default:
                         break;
                 }
+
+
             }
 
             return ResponseEntity.ok().build();
@@ -264,6 +265,23 @@ public class CheckoutController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing webhook");
+        }
+
+
+    }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<String> handleCancel(@RequestParam("session_id") String sessionId) {
+        try {
+            Session session = Session.retrieve(sessionId);
+
+            Long tempOrderId = Long.valueOf(session.getMetadata().get("tempOrderId"));
+            System.out.println("temp data id "+tempOrderId);
+            orderDetailsService.deleteOrder(tempOrderId);
+
+            return ResponseEntity.ok("Payment was canceled.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while handling the cancellation.");
         }
     }
 
