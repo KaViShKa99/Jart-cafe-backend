@@ -11,7 +11,7 @@ public class PurchaseItemDTO {
     private String designerNote;
     private double eachPrice;
     private String figure;
-    private boolean isPhysicalArt;
+    private boolean physicalArt;
     private String materialAndSize;
 //    private List<MaterialDTO> materials;
     private String numOfPersons;

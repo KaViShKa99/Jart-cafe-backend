@@ -1,7 +1,8 @@
 package com.example.jart_cafe.services.impl;
 
 
-import com.example.jart_cafe.dto.CheckoutRequest;
+import com.example.jart_cafe.dto.CheckoutRequestDTO;
+import com.example.jart_cafe.dto.CheckoutRequestDetailsDTO;
 import com.example.jart_cafe.dto.PurchaseItemDTO;
 import com.example.jart_cafe.model.OrderDetails;
 import com.example.jart_cafe.model.PurchaseItem;
@@ -10,8 +11,9 @@ import com.example.jart_cafe.services.OrderDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,80 +22,136 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
     private final OrderRepository orderRepository;
 
     @Autowired
-    public OrderDetailsServiceImpl(OrderRepository orderDetailsRepository) {
-        this.orderRepository = orderDetailsRepository;
-    }
-
-    public OrderDetails saveOrder(CheckoutRequest checkoutRequest) {
-
-        OrderDetails orderDetails = new OrderDetails();
-        orderDetails.setCustomerName(checkoutRequest.getCustomerName());
-        orderDetails.setCustomerEmail(checkoutRequest.getCustomerEmail());
-        List<PurchaseItem> items = checkoutRequest.getItems().stream()
-                .map(item -> {
-                    PurchaseItem purchaseItem = new PurchaseItem();
-                    purchaseItem.setCategory(item.getCategory());
-                    purchaseItem.setDesignerNote(item.getDesignerNote());
-                    purchaseItem.setEachPrice(item.getEachPrice());
-                    purchaseItem.setFigure(item.getFigure());
-                    purchaseItem.setPhysicalArt(item.isPhysicalArt());
-                    purchaseItem.setMaterialAndSize(item.getMaterialAndSize());
-                    purchaseItem.setNumOfPersons(item.getNumOfPersons());
-                    purchaseItem.setPrice(item.getPrice());
-                    purchaseItem.setQuantity(item.getQuantity());
-                    purchaseItem.setProductImage(item.getProductImage());
-                    purchaseItem.setStyle(item.getStyle());
-                    purchaseItem.setTotal(item.getTotal());
-                    purchaseItem.setUploadedImage(item.getUploadedImage());
-                    return purchaseItem;
-                })
-                .collect(Collectors.toList());
-        orderDetails.setItems(items);
-
-        System.out.println(orderDetails);
-
-        return orderRepository.save(orderDetails);
+    public OrderDetailsServiceImpl(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
     }
 
     @Override
-    public List<CheckoutRequest> findAll() {
-        List<OrderDetails> orderList = orderRepository.findAll();
-        List<CheckoutRequest> checkoutRequestList =  new ArrayList<>();
-
-
-        for (OrderDetails orderDetails : orderList){
-            CheckoutRequest checkoutRequest = new CheckoutRequest();
-            checkoutRequest.setCustomerEmail(orderDetails.getCustomerEmail());
-            checkoutRequest.setCustomerName(orderDetails.getCustomerName());
-
-            List<PurchaseItemDTO> purchaseItemDTOList = orderDetails.getItems().stream()
-                    .map(this::convertPurchaseItemToPurchaseItemDTO)
-                    .collect(Collectors.toList());
-
-            checkoutRequest.setItems(purchaseItemDTOList);
-            checkoutRequestList.add(checkoutRequest);
-        }
-        return checkoutRequestList;
+    public Long saveOrder(CheckoutRequestDTO checkoutRequestDTO) {
+        OrderDetails orderDetails = new OrderDetails();
+        updateOrderDetailsFromRequest(orderDetails, checkoutRequestDTO);
+        return orderRepository.save(orderDetails).getId();
+    }
+    @Override
+    public Long savePremOrder(OrderDetails orderDetails) {
+//        OrderDetails orderDetails = new OrderDetails();
+//        updateOrderDetailsFromRequest(orderDetails, checkoutRequestDTO);
+        return orderRepository.save(orderDetails).getId();
     }
 
-    // Method to convert PurchaseItem to PurchaseItemDTO
-    private PurchaseItemDTO convertPurchaseItemToPurchaseItemDTO(PurchaseItem purchaseItem) {
+    @Override
+    public List<CheckoutRequestDetailsDTO> findAll() {
+        return orderRepository.findAll().stream()
+                .map(this::convertOrderDetailsToCheckoutRequest)
+                .collect(Collectors.toList());
+    }
 
-        PurchaseItemDTO purchaseItemDTO = new PurchaseItemDTO();
-        purchaseItemDTO.setCategory(purchaseItem.getCategory());
-        purchaseItemDTO.setDesignerNote(purchaseItem.getDesignerNote());
-        purchaseItemDTO.setEachPrice(purchaseItem.getEachPrice());
-        purchaseItemDTO.setFigure(purchaseItem.getFigure());
-        purchaseItemDTO.setPhysicalArt(purchaseItem.isPhysicalArt());
-        purchaseItemDTO.setMaterialAndSize(purchaseItem.getMaterialAndSize());
-        purchaseItemDTO.setNumOfPersons(purchaseItem.getNumOfPersons());
-        purchaseItemDTO.setPrice(purchaseItem.getPrice());
-        purchaseItemDTO.setQuantity(purchaseItem.getQuantity());
-        purchaseItemDTO.setProductImage(purchaseItem.getProductImage());
-        purchaseItemDTO.setStyle(purchaseItem.getStyle());
-        purchaseItemDTO.setTotal(purchaseItem.getTotal());
-        purchaseItemDTO.setUploadedImage(purchaseItem.getUploadedImage());
-        return purchaseItemDTO;
+    @Override
+    public Optional<OrderDetails> findOrderById(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    @Override
+    public void deleteOrder(Long id) {
+        System.out.println("delete order");
+        orderRepository.findById(id).ifPresent(orderRepository::delete);
+    }
+
+
+    @Override
+    public List<OrderDetails> getOrdersByCustomerEmail(String email) {
+        return orderRepository.findByCustomerEmail(email);
+    }
+
+    @Override
+    public void updateOrderStatus(Long orderId, Boolean newStatus) {
+        OrderDetails orderDetails = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        orderDetails.setOrderStatus(newStatus);
+        orderRepository.save(orderDetails);
+    }
+
+    @Override
+    public void updateOrderDate(Long orderId, Date newCompletedDate) {
+        OrderDetails orderDetails = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        orderDetails.setCompletedDate(newCompletedDate);
+        orderRepository.save(orderDetails);
+    }
+
+
+    private void updateOrderDetailsFromRequest(OrderDetails orderDetails, CheckoutRequestDTO request) {
+        orderDetails.setOrderStatus(request.getOrderStatus());
+        orderDetails.setOrderedDate(request.getOrderedDate());
+        orderDetails.setCompletedDate(request.getCompletedDate());
+        orderDetails.setCustomerName(request.getCustomerName());
+        orderDetails.setCustomerEmail(request.getCustomerEmail());
+        List<PurchaseItem> items = request.getItems().stream()
+                .map(this::convertDTOToPurchaseItem)
+                .collect(Collectors.toList());
+        orderDetails.setItems(items);
+    }
+
+    private PurchaseItem convertDTOToPurchaseItem(PurchaseItemDTO dto) {
+        PurchaseItem item = new PurchaseItem();
+        mapDTOToPurchaseItem(dto, item);
+        return item;
+    }
+
+    private void mapDTOToPurchaseItem(PurchaseItemDTO dto, PurchaseItem item) {
+        item.setCategory(dto.getCategory());
+        item.setDesignerNote(dto.getDesignerNote());
+        item.setEachPrice(dto.getEachPrice());
+        item.setFigure(dto.getFigure());
+        item.setPhysicalArt(dto.isPhysicalArt());
+        item.setMaterialAndSize(dto.getMaterialAndSize());
+        item.setNumOfPersons(dto.getNumOfPersons());
+        item.setPrice(dto.getPrice());
+        item.setQuantity(dto.getQuantity());
+        item.setProductImage(dto.getProductImage());
+        item.setStyle(dto.getStyle());
+        item.setTotal(dto.getTotal());
+        item.setUploadedImage(dto.getUploadedImage());
+    }
+
+    private CheckoutRequestDetailsDTO convertOrderDetailsToCheckoutRequest(OrderDetails orderDetails) {
+        CheckoutRequestDetailsDTO request = new CheckoutRequestDetailsDTO();
+        request.setOrderId(orderDetails.getId());
+        request.setOrderStatus(orderDetails.getOrderStatus());
+        request.setCustomerEmail(orderDetails.getCustomerEmail());
+        request.setCustomerName(orderDetails.getCustomerName());
+        request.setOrderedDate(orderDetails.getOrderedDate());
+        request.setCompletedDate(orderDetails.getCompletedDate());
+        List<PurchaseItemDTO> itemDTOs = orderDetails.getItems().stream()
+                .map(this::convertPurchaseItemToPurchaseItemDTO)
+                .collect(Collectors.toList());
+        request.setItems(itemDTOs);
+        return request;
+    }
+
+    private PurchaseItemDTO convertPurchaseItemToPurchaseItemDTO(PurchaseItem item) {
+        PurchaseItemDTO dto = new PurchaseItemDTO();
+        mapPurchaseItemToDTO(item, dto);
+        return dto;
+    }
+
+    private void mapPurchaseItemToDTO(PurchaseItem item, PurchaseItemDTO dto) {
+        dto.setCategory(item.getCategory());
+        dto.setDesignerNote(item.getDesignerNote());
+        dto.setEachPrice(item.getEachPrice());
+        dto.setFigure(item.getFigure());
+        dto.setPhysicalArt(item.isPhysicalArt());
+        dto.setMaterialAndSize(item.getMaterialAndSize());
+        dto.setNumOfPersons(item.getNumOfPersons());
+        dto.setPrice(item.getPrice());
+        dto.setQuantity(item.getQuantity());
+        dto.setProductImage(item.getProductImage());
+        dto.setStyle(item.getStyle());
+        dto.setTotal(item.getTotal());
+        dto.setUploadedImage(item.getUploadedImage());
     }
 
 }
+
+
+

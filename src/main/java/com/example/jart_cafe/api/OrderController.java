@@ -1,15 +1,16 @@
 package com.example.jart_cafe.api;
 
 
-import com.example.jart_cafe.dto.CheckoutRequest;
+import com.example.jart_cafe.dto.CheckoutRequestDTO;
+import com.example.jart_cafe.dto.CheckoutRequestDetailsDTO;
 import com.example.jart_cafe.model.OrderDetails;
-import com.example.jart_cafe.model.PurchaseItem;
 import com.example.jart_cafe.services.OrderDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -20,9 +21,31 @@ public class OrderController {
     private OrderDetailsService orderDetailsService;
 
     @GetMapping
-    public List<CheckoutRequest> getAllOrders(){
-//        System.out.println("orderDetailsService.findAll()");
+    public List<CheckoutRequestDetailsDTO> getAllOrders(){
         return orderDetailsService.findAll();
-//        return null;
     }
+    @PutMapping("update/status/{id}")
+    public ResponseEntity<String> updatedEntity(@PathVariable Long id, @RequestBody Boolean status){
+        try {
+            System.out.println(status);
+            orderDetailsService.updateOrderStatus(id, status);
+            return ResponseEntity.ok("Order status updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found or error updating status.");
+        }
+    }
+    @PutMapping("update/complete-date/{id}")
+    public ResponseEntity<String> updatedEntity(@PathVariable Long id, @RequestBody Date date){
+        try {
+            orderDetailsService.updateOrderDate(id, date);
+            return ResponseEntity.ok("Order date updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found or error updating date.");
+        }
+    }
+    @GetMapping("get/{email}")
+    public List<OrderDetails> getOrdersByEmail(@PathVariable String email) {
+        return orderDetailsService.getOrdersByCustomerEmail(email);
+    }
+
 }

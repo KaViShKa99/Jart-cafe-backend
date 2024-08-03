@@ -22,7 +22,7 @@ public class PurchaseItem {
     private String designerNote;
     private double eachPrice;
     private String figure;
-    private boolean isPhysicalArt;
+    private boolean physicalArt;
     private String materialAndSize;
 //    @OneToMany(cascade = CascadeType.ALL)
 //    private List<Material> materials;
