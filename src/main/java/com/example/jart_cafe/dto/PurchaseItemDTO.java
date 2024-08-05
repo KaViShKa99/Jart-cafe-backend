@@ -6,14 +6,13 @@ import java.util.List;
 
 @Data
 public class PurchaseItemDTO {
-//    private Long artworkId;
+    private Long artworkId;
     private String category;
     private String designerNote;
     private double eachPrice;
     private String figure;
     private boolean physicalArt;
     private String materialAndSize;
-//    private List<MaterialDTO> materials;
     private String numOfPersons;
     private double price;
     private Long quantity;

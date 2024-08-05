@@ -34,12 +34,11 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
     }
     @Override
     public void updateTransaction(Long orderId) {
-        System.out.println(orderId);
+        System.out.println("orderId "+orderId);
         OrderDetails orderDetails = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        System.out.println(orderDetails);
         orderDetails.setOrderTransaction(true);
-        System.out.println(orderDetails);
+        System.out.println("orderDetails "+orderDetails);
         orderRepository.save(orderDetails);
     }
 
@@ -64,6 +63,8 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 
     @Override
     public List<OrderDetails> getOrdersByCustomerEmail(String email) {
+        System.out.println(email);
+        System.out.println(orderRepository.findByCustomerEmailAndOrderTransactionTrue(email));
         return orderRepository.findByCustomerEmailAndOrderTransactionTrue(email);
     }
 
@@ -105,6 +106,7 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 
     private void mapDTOToPurchaseItem(PurchaseItemDTO dto, PurchaseItem item) {
         item.setCategory(dto.getCategory());
+        item.setArtworkId(dto.getArtworkId());
         item.setDesignerNote(dto.getDesignerNote());
         item.setEachPrice(dto.getEachPrice());
         item.setFigure(dto.getFigure());

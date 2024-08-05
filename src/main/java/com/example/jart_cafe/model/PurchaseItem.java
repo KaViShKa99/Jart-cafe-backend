@@ -18,14 +18,13 @@ public class PurchaseItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "purchase_item_id")
     private Long id;
+    private Long artworkId;
     private String category;
     private String designerNote;
     private double eachPrice;
     private String figure;
     private boolean physicalArt;
     private String materialAndSize;
-//    @OneToMany(cascade = CascadeType.ALL)
-//    private List<Material> materials;
     private String numOfPersons;
     private double price;
     private Long quantity;

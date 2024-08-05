@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 //@CrossOrigin(origins = "http://localhost:5173/")
-@RestController
 //@CrossOrigin(origins = "https://jartcafe.com", allowCredentials = "true")
+@RestController
 @RequestMapping("api/artworks")
 public class ArtworkController {
 
