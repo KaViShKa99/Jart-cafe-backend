@@ -9,6 +9,7 @@ import com.example.jart_cafe.model.PurchaseItem;
 import com.example.jart_cafe.repositories.OrderRepository;
 import com.example.jart_cafe.services.OrderDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -20,10 +21,13 @@ import java.util.stream.Collectors;
 public class OrderDetailsServiceImpl implements OrderDetailsService {
 
     private final OrderRepository orderRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Autowired
-    public OrderDetailsServiceImpl(OrderRepository orderRepository) {
+    public OrderDetailsServiceImpl(OrderRepository orderRepository, SimpMessagingTemplate messagingTemplate) {
         this.orderRepository = orderRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -39,6 +43,21 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
         orderDetails.setOrderTransaction(true);
         System.out.println("orderDetails "+orderDetails);
+        orderRepository.save(orderDetails);
+    }
+
+    @Override
+    public void updateReviewStatus(Long orderId, Long artworkId, boolean status) {
+        OrderDetails orderDetails = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Find the specific PurchaseItem by artworkId
+        orderDetails.getItems().stream()
+                .filter(item -> item.getArtworkId().equals(artworkId))
+                .findFirst()
+                .ifPresent(item -> item.setReviewStatus(status));
+
+        // Save the updated OrderDetails back to the repository
         orderRepository.save(orderDetails);
     }
 
@@ -74,6 +93,12 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
         orderDetails.setOrderStatus(newStatus);
         orderRepository.save(orderDetails);
+
+//        OrderStatusMessageDTO message = new OrderStatusMessageDTO();
+//        message.setOrderId(orderId);
+//        message.setOrderStatus(newStatus);
+//        messagingTemplate.convertAndSend("/topic/orderStatus", message);
+
     }
 
     @Override
@@ -119,6 +144,7 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
         item.setStyle(dto.getStyle());
         item.setTotal(dto.getTotal());
         item.setUploadedImage(dto.getUploadedImage());
+        item.setReviewStatus(dto.isReviewStatus());
     }
 
     private CheckoutRequestDetailsDTO convertOrderDetailsToCheckoutRequest(OrderDetails orderDetails) {
@@ -156,6 +182,7 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
         dto.setStyle(item.getStyle());
         dto.setTotal(item.getTotal());
         dto.setUploadedImage(item.getUploadedImage());
+        dto.setReviewStatus(item.isReviewStatus());
     }
 
 }

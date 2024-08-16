@@ -13,6 +13,8 @@ public interface OrderDetailsService {
 
     void updateTransaction(Long orderId);
 
+    void updateReviewStatus(Long orderId, Long artworkId, boolean status);
+
     List<CheckoutRequestDetailsDTO> findAll();
 
     Optional<OrderDetails> findOrderById(Long id);

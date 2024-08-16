@@ -88,10 +88,13 @@
 			<artifactId>stripe-java</artifactId>
 			<version>26.0.0</version> <!-- Use the latest stable version -->
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
 
 
-
-	</dependencies>
+    </dependencies>
 
 	<build>
 		<plugins>

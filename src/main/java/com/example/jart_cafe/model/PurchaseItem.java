@@ -32,7 +32,10 @@ public class PurchaseItem {
     private List<String> productImage;
     private String style;
     private double total;
-    private String uploadedImage;
+    @ElementCollection
+    private List<String> uploadedImage;
+    private boolean reviewStatus;
+//    private String uploadedImage;
 
 
 }

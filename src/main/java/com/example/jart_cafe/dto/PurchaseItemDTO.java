@@ -19,6 +19,7 @@ public class PurchaseItemDTO {
     private List<String> productImage;
     private String style;
     private double total;
-    private String uploadedImage;
-
+//    private String uploadedImage;
+    private List<String> uploadedImage;
+    private boolean reviewStatus;
 }
